@@ -36,75 +36,6 @@ let init = () => {
     }
 
     initPhysics();
-
-
-
-
-}
-
-let reduceForwardFunc = () => {
-    forwardMain -= 0.01
-    joystickCallback(forwardMain, turnMain)
-
-    if (forwardMain <= 0) {
-        forwardMain = 0
-        joystickCallback(forwardMain, turnMain)
-
-        clearInterval(reduceForward)
-    }
-
-}
-
-let incForwardFunc = () => {
-    forwardMain += 0.01
-    joystickCallback(forwardMain, turnMain)
-    console.log("inc")
-    if (forwardMain >= 0) {
-        forwardMain = 0
-        joystickCallback(forwardMain, turnMain)
-        clearInterval(incForward)
-
-    }
-
-}
-
-let joystickCallback = (forward, turn) => {
-    forwardMain = forward;
-    turnMain = -turn;
-}
-
-let handler = (event) => {
-    let up = (event.type == 'keyup');
-
-    if (!up && event.type !== 'keydown') {
-        return;
-    }
-
-    switch (event.keyCode) {
-
-        case 38: // forward
-            forwardMain = up ? 0 : 1
-            break;
-
-        case 40: // backward
-            forwardMain = up ? 0 : -1
-            break;
-
-        case 39: // right
-            turnMain = up ? 0 : -1
-            break;
-
-        case 37: // left
-            turnMain = up ? 0 : 1
-            break;
-    }
-}
-
-let onWindowResize = () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 let initPhysics = () => {
@@ -122,7 +53,7 @@ let initPhysics = () => {
     wheelMaterial = new CANNON.Material("wheelMaterial");
     const wheelGroundContactMaterial = new CANNON.ContactMaterial(wheelMaterial, groundMaterial, {
         friction: 0.3,
-        restitution: 0,
+        restitution: 0.1,
         contactEquationStiffness: 1000
     });
 
@@ -140,21 +71,10 @@ let initPhysics = () => {
     animate()
 }
 
+
 let addEnvironment = () => {
     const boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5))
     boxMaterial = new CANNON.Material("boxMaterial");
-    // const boxGroundContactMaterial = new CANNON.ContactMaterial(boxMaterial, groundMaterial, {
-    //     friction: 1,
-    //     restitution: 0,
-    //     contactEquationStiffness: 100000
-    // });
-    // const boxGroundContactMaterial = new CANNON.ContactMaterial(boxMaterial, boxMaterial, {
-    //     friction: 1,
-    //     restitution: ,
-    //     contactEquationStiffness: 1000000000
-    // });
-
-    // world.addContactMaterial(boxGroundContactMaterial);
 
     for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
@@ -165,7 +85,7 @@ let addEnvironment = () => {
             })
             boxBody.addShape(boxShape)
             boxBody.allowSleep = true
-            boxBody.sleepSpeedLimit = 0.7
+            boxBody.sleepSpeedLimit = 0.2
             boxBody.position.set(5 + j, i + 1, 5)
 
 
@@ -176,6 +96,44 @@ let addEnvironment = () => {
 
     }
 
+    let wedgeBody = new CANNON.Body({
+        mass: 1,
+        friction: 1,
+        material: boxMaterial
+    })
+
+    let wedge = [
+        {
+            "verts":
+                [
+                    -1, -1, -1,
+                    1, -1, -1,
+                    -1, -1, 1,
+                    1, -1, 1,
+                    1, 1, 1,
+                    -1, 1, 1
+                ],
+            "faces":
+                [
+                    0, 1, 2,
+                    1, 3, 2,
+                    1, 4, 3,
+                    2, 3, 5,
+                    3, 4, 5,
+                    0, 2, 5,
+                    0, 5, 4,
+                    1, 0, 4
+                ],
+            "offset": [0, 0, 0]
+        }];
+
+    let wedgeShape = new CANNON.ConvexPolyhedron(wedge.verts, wedge.faces);
+    wedgeBody.addShape(wedgeShape)
+    wedgeBody.position.set(5, 5, 5)
+    world.add(wedgeBody)
+
+    helper.addVisual(wedgeBody, 'ramp')
+
 }
 
 
@@ -185,7 +143,7 @@ let addCar = () => {
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 1, 2));
     const chassisBody = new CANNON.Body({ mass: 150, material: chassisMaterial });
     chassisBody.addShape(chassisShape);
-    chassisBody.position.set(0, 6, 0);
+    chassisBody.position.set(0, 2, 0);
     helper.addVisual(chassisBody, 'car');
 
 
@@ -260,21 +218,47 @@ let addCar = () => {
     helper.shadowTarget = chassisBody.threemesh;
 }
 
-let animate = () => {
-    requestAnimationFrame(animate)
 
-    const now = Date.now();
-    if (lastTime === undefined) lastTime = now;
-    const dt = (Date.now() - lastTime) / 1000.0;
-    lastTime = now;
+let joystickCallback = (forward, turn) => {
+    forwardMain = forward;
+    turnMain = -turn;
+}
 
-    world.step(fixedTimeStep, dt);
-    helper.updateBodies(world);
+let handler = (event) => {
+    let up = (event.type == 'keyup');
 
-    updateDrive();
-    // updateCamera();
+    if (!up && event.type !== 'keydown') {
+        return;
+    }
+    switch (event.keyCode) {
 
-    renderer.render(scene, camera);
+        case 38: // forward
+            forwardMain = up ? 0 : 1
+            break;
+
+        case 40: // backward
+            forwardMain = up ? 0 : -1
+            break;
+
+        case 39: // right
+            turnMain = up ? 0 : -1
+            break;
+
+        case 37: // left
+            turnMain = up ? 0 : 1
+            break;
+        case 84:
+            vehicle.chassisBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 0), 0)
+            vehicle.chassisBody.position.y = 3
+            break;
+    }
+}
+
+let onWindowResize = () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 let updateDrive = (forward = forwardMain, turn = turnMain) => {
@@ -317,6 +301,24 @@ let updateDrive = (forward = forwardMain, turn = turnMain) => {
 let updateCamera = () => {
     camera.position.lerp(followCam.getWorldPosition(new THREE.Vector3()), 0.05);
     camera.lookAt(vehicle.chassisBody.threemesh.position);
+}
+
+
+let animate = () => {
+    requestAnimationFrame(animate)
+
+    const now = Date.now();
+    if (lastTime === undefined) lastTime = now;
+    const dt = (Date.now() - lastTime) / 1000.0;
+    lastTime = now;
+
+    world.step(fixedTimeStep, dt);
+    helper.updateBodies(world);
+
+    updateDrive();
+    // updateCamera();
+
+    renderer.render(scene, camera);
 }
 
 

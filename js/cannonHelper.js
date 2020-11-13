@@ -73,7 +73,7 @@ class CannonHelper {
     addVisual(body, name, castShadow = false, receiveShadow = false, currentMaterial) {
         body.name = name;
         this.currentMaterial = currentMaterial
-        if (this.currentMaterial === undefined) this.currentMaterial = new THREE.MeshLambertMaterial({ color: 0x888888 });
+        if (this.currentMaterial === undefined) this.currentMaterial = new THREE.MeshLambertMaterial({ color: 0xE8E8E8 });
         if (this.settings === undefined) {
             this.settings = {
                 stepFrequency: 60,

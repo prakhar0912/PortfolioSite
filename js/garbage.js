@@ -21,6 +21,31 @@
 
 
 
+// let reduceForwardFunc = () => {
+//     forwardMain -= 0.01
+//     joystickCallback(forwardMain, turnMain)
+
+//     if (forwardMain <= 0) {
+//         forwardMain = 0
+//         joystickCallback(forwardMain, turnMain)
+
+//         clearInterval(reduceForward)
+//     }
+
+// }
+
+// let incForwardFunc = () => {
+//     forwardMain += 0.01
+//     joystickCallback(forwardMain, turnMain)
+//     console.log("inc")
+//     if (forwardMain >= 0) {
+//         forwardMain = 0
+//         joystickCallback(forwardMain, turnMain)
+//         clearInterval(incForward)
+
+//     }
+
+// }
 
 
 
