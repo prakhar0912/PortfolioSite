@@ -96,43 +96,43 @@ let addEnvironment = () => {
 
     }
 
-    let wedgeBody = new CANNON.Body({
-        mass: 1,
-        friction: 1,
-        material: boxMaterial
-    })
+    // let wedgeBody = new CANNON.Body({
+    //     mass: 1,
+    //     friction: 1,
+    //     material: boxMaterial
+    // })
 
-    let wedge = [
-        {
-            "verts":
-                [
-                    -1, -1, -1,
-                    1, -1, -1,
-                    -1, -1, 1,
-                    1, -1, 1,
-                    1, 1, 1,
-                    -1, 1, 1
-                ],
-            "faces":
-                [
-                    0, 1, 2,
-                    1, 3, 2,
-                    1, 4, 3,
-                    2, 3, 5,
-                    3, 4, 5,
-                    0, 2, 5,
-                    0, 5, 4,
-                    1, 0, 4
-                ],
-            "offset": [0, 0, 0]
-        }];
+    // let wedge = [
+    //     {
+    //         "verts":
+    //             [
+    //                 -1, -1, -1,
+    //                 1, -1, -1,
+    //                 -1, -1, 1,
+    //                 1, -1, 1,
+    //                 1, 1, 1,
+    //                 -1, 1, 1
+    //             ],
+    //         "faces":
+    //             [
+    //                 0, 1, 2,
+    //                 1, 3, 2,
+    //                 1, 4, 3,
+    //                 2, 3, 5,
+    //                 3, 4, 5,
+    //                 0, 2, 5,
+    //                 0, 5, 4,
+    //                 1, 0, 4
+    //             ],
+    //         "offset": [0, 0, 0]
+    //     }];
 
-    let wedgeShape = new CANNON.ConvexPolyhedron(wedge.verts, wedge.faces);
-    wedgeBody.addShape(wedgeShape)
-    wedgeBody.position.set(5, 5, 5)
-    world.add(wedgeBody)
+    // let wedgeShape = new CANNON.ConvexPolyhedron(wedge.verts, wedge.faces);
+    // wedgeBody.addShape(wedgeShape)
+    // wedgeBody.position.set(5, 5, 5)
+    // world.add(wedgeBody)
 
-    helper.addVisual(wedgeBody, 'ramp')
+    // helper.addVisual(wedgeBody, 'ramp')
 
 }
 
