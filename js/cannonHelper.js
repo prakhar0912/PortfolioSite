@@ -120,6 +120,7 @@ class CannonHelper {
 
     shape2Mesh(body, castShadow, receiveShadow, name) {
         const obj = new THREE.Object3D();
+        obj.name = name
         const material = this.currentMaterial;
         const game = this;
         let index = 0;

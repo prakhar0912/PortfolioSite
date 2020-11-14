@@ -36,190 +36,37 @@ let init = () => {
     }
 
     initPhysics();
+
+
+
+
 }
 
-let initPhysics = async () => {
+let reduceForwardFunc = () => {
+    forwardMain -= 0.01
+    joystickCallback(forwardMain, turnMain)
 
-    world = new CANNON.World();
+    if (forwardMain <= 0) {
+        forwardMain = 0
+        joystickCallback(forwardMain, turnMain)
 
-    world.broadphase = new CANNON.SAPBroadphase(world);
-    world.gravity.set(0, -15, 0);
+        clearInterval(reduceForward)
+    }
 
-    world.defaultContactMaterial.friction = 0.3
-    world.allowSleep = true
-
-
-    // setTimeout(() => {
-    //     world.allowSleep = true
-    // }, 1000)
-
-
-
-    groundMaterial = new CANNON.Material("groundMaterial");
-    wheelMaterial = new CANNON.Material("wheelMaterial");
-    const wheelGroundContactMaterial = new CANNON.ContactMaterial(wheelMaterial, groundMaterial, {
-        friction: 0.3,
-        restitution: 0,
-        contactEquationStiffness: 1000
-    });
-
-    // We must add the contact materials to the this.world
-    world.addContactMaterial(wheelGroundContactMaterial);
-
-    await addCar()
-
-
-
-    let shape = new CANNON.Plane()
-    let groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
-    groundBody.addShape(shape);
-    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-    // groundBody.position.set(0,0,0)
-    world.add(groundBody);
-    helper.addVisual(groundBody, 'landscape', true, true, new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors }));
-    addEnvironment()
-    animate()
 }
 
-
-let addEnvironment = () => {
-    const boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5))
-    boxMaterial = new CANNON.Material("boxMaterial");
-
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
-            boxBody = new CANNON.Body({
-                mass: 1,
-                material: boxMaterial,
-                friction: 0.9
-            })
-            boxBody.addShape(boxShape)
-            boxBody.allowSleep = true
-            boxBody.sleepSpeedLimit = 0.2
-            boxBody.sleepTimeLimit = 1;
-            boxBody.position.set(5 + j, i + 1, 5)
-
-
-            world.add(boxBody)
-            helper.addVisual(boxBody, 'box')
-        }
-
+let incForwardFunc = () => {
+    forwardMain += 0.01
+    joystickCallback(forwardMain, turnMain)
+    console.log("inc")
+    if (forwardMain >= 0) {
+        forwardMain = 0
+        joystickCallback(forwardMain, turnMain)
+        clearInterval(incForward)
 
     }
 
-    let wedgeMaterial = new CANNON.Material('wedgeMaterial')
-
-    world.addContactMaterial(new CANNON.ContactMaterial(wheelMaterial, wedgeMaterial, {
-        friction: 0.3,
-        restitution: 0,
-        contactEquationStiffness: 10
-    }))
-
-    let wedgeBody = new CANNON.Body({
-        mass: 0,
-        material: wedgeMaterial
-    })
-
-
-    let wedgeShape = new CANNON.Box(new CANNON.Vec3(3, 0.1, 3));
-    wedgeBody.addShape(wedgeShape)
-    wedgeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 12)
-    wedgeBody.position.set(6.5, 0.5, 12)
-    world.add(wedgeBody)
-
-    helper.addVisual(wedgeBody, 'ramp')
-
 }
-
-
-
-let addCar = () => {
-    return new Promise((res, rej) => {
-        const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 1, 2));
-        const chassisBody = new CANNON.Body({ mass: 150 });
-        chassisBody.addShape(chassisShape);
-        chassisBody.position.set(0, 20, 0);
-        helper.addVisual(chassisBody, 'car');
-
-
-        const options = {
-            radius: 0.5,
-            directionLocal: new CANNON.Vec3(0, -1, 0),
-            suspensionStiffness: 30,
-            suspensionRestLength: 0,
-            frictionSlip: 5,
-            dampingRelaxation: 2.3,
-            dampingCompression: 4.4,
-            maxSuspensionForce: 100000,
-            rollInfluence: 0.01,
-            axleLocal: new CANNON.Vec3(-1, 0, 0),
-            chassisConnectionPointLocal: new CANNON.Vec3(1, 1, 0),
-            maxSuspensionTravel: 0.3,
-            customSlidingRotationalSpeed: 0,
-            useCustomSlidingRotationalSpeed: true
-        };
-
-        // Create the vehicle
-        vehicle = new CANNON.RaycastVehicle({
-            chassisBody: chassisBody,
-            indexRightAxis: 0,
-            indexUpAxis: 1,
-            indexForwardAxis: 2
-        });
-
-        options.chassisConnectionPointLocal.set(1, -1.0, -1);
-        vehicle.addWheel(options);
-
-        options.chassisConnectionPointLocal.set(-1, -1.0, -1);
-        vehicle.addWheel(options);
-
-        options.chassisConnectionPointLocal.set(1, -1.0, 1);
-        vehicle.addWheel(options);
-
-        options.chassisConnectionPointLocal.set(-1, -1.0, 1);
-        vehicle.addWheel(options);
-
-        vehicle.addToWorld(world);
-
-
-        const wheelBodies = [];
-        vehicle.wheelInfos.forEach((wheel, i) => {
-            const cylinderShape = new CANNON.Cylinder(wheel.radius + 0.1, wheel.radius, wheel.radius / 2, 20);
-            const wheelBody = new CANNON.Body({ mass: 1, material: wheelMaterial });
-            // wheelBody.sleepSpeedLimit = 1
-            const q = new CANNON.Quaternion();
-            q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
-            wheelBody.addShape(cylinderShape, new CANNON.Vec3(), q);
-            wheelBodies.push(wheelBody);
-            helper.addVisual(wheelBody, 'wheel' + i);
-        });
-
-
-        // Update wheels
-        world.addEventListener('postStep', function () {
-            let index = 0;
-            vehicle.wheelInfos.forEach(function (wheel) {
-                vehicle.updateWheelTransform(index);
-                const t = wheel.worldTransform;
-                wheelBodies[index].threemesh.position.copy(t.position);
-                wheelBodies[index].threemesh.quaternion.copy(t.quaternion);
-                index++;
-            });
-        });
-
-
-        followCam = new THREE.Object3D();
-        followCam.name = 'followCam'
-        followCam.position.copy(camera.position);
-        scene.add(followCam);
-        followCam.parent = chassisBody.threemesh;
-        helper.shadowTarget = chassisBody.threemesh;
-        res()
-    })
-
-
-}
-
 
 let joystickCallback = (forward, turn) => {
     forwardMain = forward;
@@ -232,6 +79,7 @@ let handler = (event) => {
     if (!up && event.type !== 'keydown') {
         return;
     }
+
     switch (event.keyCode) {
 
         case 38: // forward
@@ -240,24 +88,14 @@ let handler = (event) => {
 
         case 40: // backward
             forwardMain = up ? 0 : -1
-            break; 
+            break;
+
         case 39: // right
             turnMain = up ? 0 : -1
             break;
 
         case 37: // left
             turnMain = up ? 0 : 1
-            break;
-        case 84:
-            scene.remove(scene.getObjectByName('car'))
-            for(let i = 0; i < 4; i++){
-                scene.remove(scene.getObjectByName('wheel' + i))
-            }
-            vehicle.removeFromWorld(world)
-            scene.remove(scene.getObjectByName('followCam'))
-            camera.position.set(10, 20, 15);
-
-            addCar()
             break;
     }
 }
@@ -267,6 +105,176 @@ let onWindowResize = () => {
     camera.updateProjectionMatrix();
 
     renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+let initPhysics = () => {
+    physics = {};
+    world = new CANNON.World();
+
+    world.broadphase = new CANNON.SAPBroadphase(world);
+    world.gravity.set(0, -20, 0);
+
+    world.defaultContactMaterial.friction = 0.3
+    world.allowSleep = true
+    addCar()
+
+    groundMaterial = new CANNON.Material("groundMaterial");
+    wheelMaterial = new CANNON.Material("wheelMaterial");
+    const wheelGroundContactMaterial = new CANNON.ContactMaterial(wheelMaterial, groundMaterial, {
+        friction: 0.3,
+        restitution: 0,
+        contactEquationStiffness: 1000
+    });
+
+    // We must add the contact materials to the this.world
+    world.addContactMaterial(wheelGroundContactMaterial);
+
+    let shape = new CANNON.Plane()
+    let groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
+    groundBody.addShape(shape);
+    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+    world.add(groundBody);
+    helper.addVisual(groundBody, 'landscape', true, true, new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors }));
+    
+    addEnvironment()
+    animate()
+}
+
+let addEnvironment = () => {
+    const boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5))
+    boxMaterial = new CANNON.Material("boxMaterial");
+    // const boxGroundContactMaterial = new CANNON.ContactMaterial(boxMaterial, groundMaterial, {
+    //     friction: 1,
+    //     restitution: 0,
+    //     contactEquationStiffness: 100000
+    // });
+    // const boxGroundContactMaterial = new CANNON.ContactMaterial(boxMaterial, boxMaterial, {
+    //     friction: 1,
+    //     restitution: ,
+    //     contactEquationStiffness: 1000000000
+    // });
+
+    // world.addContactMaterial(boxGroundContactMaterial);
+
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            boxBody = new CANNON.Body({
+                mass: 1,
+                material: boxMaterial,
+                friction: 0.9
+            })
+            boxBody.addShape(boxShape)
+            boxBody.allowSleep = true
+            boxBody.sleepSpeedLimit = 0.7
+            boxBody.position.set(5 + j, i + 1, 5)
+
+
+            world.add(boxBody)
+            helper.addVisual(boxBody, 'box')
+        }
+
+
+    }
+
+}
+
+
+
+let addCar = () => {
+    const chassisMaterial = new CANNON.Material("groundMaterial");
+    const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 1, 2));
+    const chassisBody = new CANNON.Body({ mass: 150, material: chassisMaterial });
+    chassisBody.addShape(chassisShape);
+    chassisBody.position.set(0, 10, 0);
+    helper.addVisual(chassisBody, 'car');
+
+
+    const options = {
+        radius:1,
+        directionLocal: new CANNON.Vec3(0, -1, 0),
+        suspensionStiffness: 30,
+        suspensionRestLength: 0,
+        frictionSlip: 5,
+        dampingRelaxation: 2.3,
+        dampingCompression: 4.4,
+        maxSuspensionForce: 100000,
+        rollInfluence: 0.01,
+        axleLocal: new CANNON.Vec3(-1, 0, 0),
+        chassisConnectionPointLocal: new CANNON.Vec3(1, 1, 0),
+        maxSuspensionTravel: 0.3,
+        customSlidingRotationalSpeed: 0,
+        useCustomSlidingRotationalSpeed: true
+    };
+
+    // Create the vehicle
+    vehicle = new CANNON.RaycastVehicle({
+        chassisBody: chassisBody,
+        indexRightAxis: 0,
+        indexUpAxis: 1,
+        indexForwardAxis: 2
+    });
+
+    options.chassisConnectionPointLocal.set(1, 0, -1);
+    vehicle.addWheel(options);
+
+    options.chassisConnectionPointLocal.set(-1, 0, -1);
+    vehicle.addWheel(options);
+
+    options.chassisConnectionPointLocal.set(1, 0, 1);
+    vehicle.addWheel(options);
+
+    options.chassisConnectionPointLocal.set(-1, 0, 1);
+    vehicle.addWheel(options);
+
+    vehicle.addToWorld(world);
+    const wheelBodies = [];
+    vehicle.wheelInfos.forEach((wheel, i) => {
+        const cylinderShape = new CANNON.Cylinder(wheel.radius + 0.1, wheel.radius, wheel.radius / 2, 20);
+        const wheelBody = new CANNON.Body({ mass: 1, material: wheelMaterial });
+        wheelBody.sleepSpeedLimit = 1
+        const q = new CANNON.Quaternion();
+        q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
+        wheelBody.addShape(cylinderShape, new CANNON.Vec3(), q);
+        wheelBodies.push(wheelBody);
+        helper.addVisual(wheelBody, 'wheel' + i);
+    });
+
+
+    // Update wheels
+    world.addEventListener('postStep', function () {
+        let index = 0;
+        vehicle.wheelInfos.forEach(function (wheel) {
+            vehicle.updateWheelTransform(index);
+            const t = wheel.worldTransform;
+            wheelBodies[index].threemesh.position.copy(t.position);
+            wheelBodies[index].threemesh.quaternion.copy(t.quaternion);
+            index++;
+        });
+    });
+
+
+    followCam = new THREE.Object3D();
+    followCam.position.copy(camera.position);
+    scene.add(followCam);
+    followCam.parent = chassisBody.threemesh;
+    helper.shadowTarget = chassisBody.threemesh;
+}
+
+let animate = () => {
+    requestAnimationFrame(animate)
+
+    const now = Date.now();
+    if (lastTime === undefined) lastTime = now;
+    const dt = (Date.now() - lastTime) / 1000.0;
+    lastTime = now;
+
+    world.step(fixedTimeStep, dt);
+    helper.updateBodies(world);
+
+    updateDrive();
+    // updateCamera();
+
+    renderer.render(scene, camera);
 }
 
 let updateDrive = (forward = forwardMain, turn = turnMain) => {
@@ -312,26 +320,8 @@ let updateCamera = () => {
 }
 
 
-let animate = () => {
-    requestAnimationFrame(animate)
-
-    const now = Date.now();
-    if (lastTime === undefined) lastTime = now;
-    const dt = (Date.now() - lastTime) / 1000.0;
-    lastTime = now;
-
-    world.step(fixedTimeStep, dt);
-    helper.updateBodies(world);
-
-    updateDrive();
-    updateCamera();
-
-    renderer.render(scene, camera);
-}
-
-
 class JoyStick {
-    constructor(options) {
+    constructor (options) {
         const circle = document.createElement("div");
         circle.style.cssText = "position:absolute; bottom:35px; width:80px; height:80px; background:rgba(126, 126, 126, 0.5); border:#444 solid medium; border-radius:50%; left:50%; transform:translateX(-50%);";
         const thumb = document.createElement("div");
