@@ -6,8 +6,6 @@ class CannonHelper {
     }
 
     addLights(renderer) {
-        // renderer.shadowMap.enabled = true;
-        // renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
         // LIGHTS
         const ambient = new THREE.AmbientLight(0x888888, 1);
@@ -15,20 +13,6 @@ class CannonHelper {
 
         const light = new THREE.DirectionalLight(0xdddddd, 1);
         light.position.set(3, 10, 4);
-        // light.target.position.set(0, 0, 0);
-
-        // light.castShadow = true;
-
-        // const lightSize = 10;
-        // light.shadow.camera.near = 1;
-        // light.shadow.camera.far = 50;
-        // light.shadow.camera.left = light.shadow.camera.bottom = -lightSize;
-        // light.shadow.camera.right = light.shadow.camera.top = lightSize;
-
-        // light.shadow.mapSize.width = 1024;
-        // light.shadow.mapSize.height = 1024;
-
-        // this.sun = light;
         this.scene.add(light);
     }
 
@@ -124,7 +108,7 @@ class CannonHelper {
         const material = this.currentMaterial;
         const game = this;
         let index = 0;
-
+        let model = false
         body.shapes.forEach(function (shape) {
             let mesh;
             let geometry;
@@ -176,6 +160,7 @@ class CannonHelper {
 
                 case CANNON.Shape.types.BOX:
                     if (name == 'car') {
+                        model = true
                         loader.load('assets/car.gltf', (gltf) => {
                             gltf.scene.scale.set(2.8, 2.8, 2.8);
                             mesh = gltf.scene
@@ -202,6 +187,27 @@ class CannonHelper {
                             console.log(err)
                         })
                     }
+                    else if(name.slice(0, 6) == 'letter'){
+                        model = true
+                        loader.load('assets/alphabets/A.gltf', (gltf) => {
+                            gltf.scene.scale.set(5, 5, 5);
+                            mesh = gltf.scene
+                            mesh.receiveShadow = receiveShadow;
+                            mesh.castShadow = castShadow;
+                            var o = body.shapeOffsets[index];
+                            var q = body.shapeOrientations[index++];
+                            mesh.position.set(o.x, o.y, o.z);
+                            mesh.quaternion.set(q.x, q.y, q.z, q.w);
+                            mesh.position.y = -1
+                            obj.add(mesh);
+                            return obj;
+
+                        }, (xhr) => {
+                            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                        }, (err) => {
+                            console.log(err)
+                        })
+                    }
 
                     else {
                         const box_geometry = new THREE.BoxGeometry(shape.halfExtents.x * 2,
@@ -213,6 +219,7 @@ class CannonHelper {
 
                 case CANNON.Shape.types.CONVEXPOLYHEDRON:
                     if (name.slice(0, 5) == 'wheel') {
+                        model = true
                         let number = name.slice(5, 6)
 
                         loader.load('assets/wheel.gltf', (gltf) => {
@@ -324,7 +331,7 @@ class CannonHelper {
                 default:
                     throw "Visual type not recognized: " + shape.type;
             }
-            if (name != 'car' && name.slice(0, 5) != 'wheel') {
+            if (!model) {
                 mesh.receiveShadow = receiveShadow;
                 mesh.castShadow = castShadow;
 

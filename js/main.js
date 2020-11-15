@@ -45,25 +45,19 @@ let initPhysics = async () => {
     world.broadphase = new CANNON.SAPBroadphase(world);
     world.gravity.set(0, -15, 0);
 
-    world.defaultContactMaterial.friction = 0.3
+    world.defaultContactMaterial.friction = 0.1
     world.allowSleep = true
-
-
-    // setTimeout(() => {
-    //     world.allowSleep = true
-    // }, 1000)
 
 
 
     groundMaterial = new CANNON.Material("groundMaterial");
     wheelMaterial = new CANNON.Material("wheelMaterial");
     const wheelGroundContactMaterial = new CANNON.ContactMaterial(wheelMaterial, groundMaterial, {
-        friction: 0.3,
-        restitution: 0,
+        friction: 0.5,
+        restitution: 0.6,
         contactEquationStiffness: 1000
     });
 
-    // We must add the contact materials to the this.world
     world.addContactMaterial(wheelGroundContactMaterial);
 
     await addCar()
@@ -74,7 +68,6 @@ let initPhysics = async () => {
     let groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
     groundBody.addShape(shape);
     groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-    // groundBody.position.set(0,0,0)
     world.add(groundBody);
     helper.addVisual(groundBody, 'landscape', true, true, new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors }));
     addEnvironment()
@@ -83,37 +76,47 @@ let initPhysics = async () => {
 
 
 let addEnvironment = () => {
+
+
+
+    //Boxes
     const boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5))
     boxMaterial = new CANNON.Material("boxMaterial");
 
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
+
+    for (let i = 0; i < 5; i++) {
+        for (let j = 0; j < 5; j++) {
             boxBody = new CANNON.Body({
-                mass: 1,
+                mass: 0.3,
                 material: boxMaterial,
-                friction: 0.9
+                friction: 1,
+                restitution: 0
             })
             boxBody.addShape(boxShape)
             boxBody.allowSleep = true
-            boxBody.sleepSpeedLimit = 0.2
+            boxBody.sleepSpeedLimit = 1
             boxBody.sleepTimeLimit = 1;
-            boxBody.position.set(5 + j, i + 1, 5)
-
-
+            boxBody.position.set(5 + j, i + .6, 5)
             world.add(boxBody)
-            helper.addVisual(boxBody, 'box')
+
+
+            if(i == 1 || (i == 2 && j != 0 && j != 4) || (i == 3 && j == 2)){
+                helper.addVisual(boxBody, 'box', false, false, new THREE.MeshLambertMaterial({color: 0xE8E8E8 }))
+            }
+            else{
+                helper.addVisual(boxBody, 'box', false, false, new THREE.MeshLambertMaterial({color: 0xf08080 }))
+            }
+
+
+            
         }
 
 
     }
 
-    let wedgeMaterial = new CANNON.Material('wedgeMaterial')
 
-    world.addContactMaterial(new CANNON.ContactMaterial(wheelMaterial, wedgeMaterial, {
-        friction: 0.3,
-        restitution: 0,
-        contactEquationStiffness: 10
-    }))
+    //Wedge
+    let wedgeMaterial = new CANNON.Material('wedgeMaterial')
 
     let wedgeBody = new CANNON.Body({
         mass: 0,
@@ -121,13 +124,59 @@ let addEnvironment = () => {
     })
 
 
-    let wedgeShape = new CANNON.Box(new CANNON.Vec3(3, 0.1, 3));
+    let wedgeShape = new CANNON.Box(new CANNON.Vec3(4, 0.1, 3));
     wedgeBody.addShape(wedgeShape)
     wedgeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 12)
     wedgeBody.position.set(6.5, 0.5, 12)
     world.add(wedgeBody)
 
     helper.addVisual(wedgeBody, 'ramp')
+
+
+
+    //Name
+    let nameShapes = {
+        'size':[
+            [1,1.2,1],
+            [1,1.2,1],
+            [1,1.2,1],
+            [1,1.2,1],
+            [1,1.2,1],
+            [1,1.2,1],
+            [1,1.2,1],
+            [1,1.2,1],
+            [1,1.2,1],
+            [1,1.2,1],
+            [1,1.2,1]
+        ],
+        // 'offset':[
+        //     [1,1,1],
+        //     [1,1,1],
+        //     [1,1,1],
+        //     [1,1,1],
+        //     [1,1,1],
+        //     [1,1,1],
+        //     [1,1,1],
+        //     [1,1,1],
+        //     [1,1,1],
+        //     [1,1,1],
+        //     [1,1,1]
+        // ]
+    }
+    
+    
+
+    for(let i = 0; i < 11; i++){
+        letterBody = new CANNON.Body({
+            mass: 1,
+            material: boxMaterial,
+            
+        })
+        letterBody.addShape(new CANNON.Box(new CANNON.Vec3(nameShapes.size[i][0], nameShapes.size[i][1], nameShapes.size[i][2])))
+        letterBody.position.set(-6, 6, (i*7) + 4)
+        world.add(letterBody)
+        helper.addVisual(letterBody, 'lettaer' + i)
+    }
 
 }
 
@@ -154,8 +203,8 @@ let addCar = () => {
             rollInfluence: 0.01,
             axleLocal: new CANNON.Vec3(-1, 0, 0),
             chassisConnectionPointLocal: new CANNON.Vec3(1, 1, 0),
-            maxSuspensionTravel: 0.3,
-            customSlidingRotationalSpeed: 0,
+            maxSuspensionTravel: 0.5,
+            customSlidingRotationalSpeed: -30,
             useCustomSlidingRotationalSpeed: true
         };
 
@@ -184,9 +233,10 @@ let addCar = () => {
 
         const wheelBodies = [];
         vehicle.wheelInfos.forEach((wheel, i) => {
-            const cylinderShape = new CANNON.Cylinder(wheel.radius + 0.1, wheel.radius, wheel.radius / 2, 20);
+            const cylinderShape = new CANNON.Cylinder(wheel.radius + 0.5, wheel.radius, wheel.radius / 2, 20);
             const wheelBody = new CANNON.Body({ mass: 1, material: wheelMaterial });
-            // wheelBody.sleepSpeedLimit = 1
+            wheelBody.allowSleep = true
+            wheelBody.sleepSpeedLimit = 1
             const q = new CANNON.Quaternion();
             q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
             wheelBody.addShape(cylinderShape, new CANNON.Vec3(), q);
@@ -232,6 +282,7 @@ let handler = (event) => {
     if (!up && event.type !== 'keydown') {
         return;
     }
+
     switch (event.keyCode) {
 
         case 38: // forward
@@ -324,7 +375,7 @@ let animate = () => {
     helper.updateBodies(world);
 
     updateDrive();
-    updateCamera();
+    // updateCamera();
 
     renderer.render(scene, camera);
 }
