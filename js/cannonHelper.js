@@ -1,7 +1,7 @@
 const loader = new THREE.GLTFLoader();
 
 class CannonHelper {
-    constructor (scene) {
+    constructor(scene) {
         this.scene = scene;
     }
 
@@ -57,7 +57,7 @@ class CannonHelper {
     addVisual(body, name, castShadow = false, receiveShadow = false, currentMaterial) {
         body.name = name;
         this.currentMaterial = currentMaterial
-        if (this.currentMaterial === undefined) this.currentMaterial = new THREE.MeshLambertMaterial({ color: 0xE8E8E8 });
+        if (this.currentMaterial === undefined) this.currentMaterial = new THREE.MeshLambertMaterial({ color: 0xE8E8E8, side: THREE.DoubleSide });
         if (this.settings === undefined) {
             this.settings = {
                 stepFrequency: 60,
@@ -187,27 +187,7 @@ class CannonHelper {
                             console.log(err)
                         })
                     }
-                    else if(name.slice(0, 6) == 'letter'){
-                        model = true
-                        loader.load('assets/alphabets/A.gltf', (gltf) => {
-                            gltf.scene.scale.set(5, 5, 5);
-                            mesh = gltf.scene
-                            mesh.receiveShadow = receiveShadow;
-                            mesh.castShadow = castShadow;
-                            var o = body.shapeOffsets[index];
-                            var q = body.shapeOrientations[index++];
-                            mesh.position.set(o.x, o.y, o.z);
-                            mesh.quaternion.set(q.x, q.y, q.z, q.w);
-                            mesh.position.y = -1
-                            obj.add(mesh);
-                            return obj;
 
-                        }, (xhr) => {
-                            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                        }, (err) => {
-                            console.log(err)
-                        })
-                    }
 
                     else {
                         const box_geometry = new THREE.BoxGeometry(shape.halfExtents.x * 2,
@@ -308,24 +288,69 @@ class CannonHelper {
                     break;
 
                 case CANNON.Shape.types.TRIMESH:
-                    geometry = new THREE.Geometry();
 
-                    v0 = new CANNON.Vec3();
-                    v1 = new CANNON.Vec3();
-                    v2 = new CANNON.Vec3();
-                    for (let i = 0; i < shape.indices.length / 3; i++) {
-                        shape.getTriangleVertices(i, v0, v1, v2);
-                        geometry.vertices.push(
-                            new THREE.Vector3(v0.x, v0.y, v0.z),
-                            new THREE.Vector3(v1.x, v1.y, v1.z),
-                            new THREE.Vector3(v2.x, v2.y, v2.z)
-                        );
-                        var j = geometry.vertices.length - 3;
-                        geometry.faces.push(new THREE.Face3(j, j + 1, j + 2));
+                    if (name.slice(0, 6) == 'letter') {
+                        model = true
+                        loader.load('assets/alphabets/P.gltf', (gltf) => {
+                            gltf.scene.scale.set(5, 5, 5);
+                            mesh = gltf.scene
+                            mesh.receiveShadow = receiveShadow;
+                            mesh.castShadow = castShadow;
+
+
+                            geometry = new THREE.Geometry();
+
+                            v0 = new CANNON.Vec3();
+                            v1 = new CANNON.Vec3();
+                            v2 = new CANNON.Vec3();
+                            for (let i = 0; i < shape.indices.length / 3; i++) {
+                                shape.getTriangleVertices(i, v0, v1, v2);
+                                geometry.vertices.push(
+                                    new THREE.Vector3(v0.x, v0.y, v0.z),
+                                    new THREE.Vector3(v1.x, v1.y, v1.z),
+                                    new THREE.Vector3(v2.x, v2.y, v2.z)
+                                );
+                                var j = geometry.vertices.length - 3;
+                                geometry.faces.push(new THREE.Face3(j, j + 1, j + 2));
+                            }
+                            geometry.computeBoundingSphere();
+                            geometry.computeFaceNormals();
+                            let meshb = new THREE.Mesh(geometry, material);
+
+
+                            obj.add(mesh);
+                            obj.add(meshb)
+                            return obj;
+
+                        }, (xhr) => {
+                            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                        }, (err) => {
+                            console.log(err)
+                        })
                     }
-                    geometry.computeBoundingSphere();
-                    geometry.computeFaceNormals();
-                    mesh = new THREE.Mesh(geometry, MutationRecordaterial);
+                    else {
+                        geometry = new THREE.Geometry();
+
+                        v0 = new CANNON.Vec3();
+                        v1 = new CANNON.Vec3();
+                        v2 = new CANNON.Vec3();
+                        for (let i = 0; i < shape.indices.length / 3; i++) {
+                            shape.getTriangleVertices(i, v0, v1, v2);
+                            geometry.vertices.push(
+                                new THREE.Vector3(v0.x, v0.y, v0.z),
+                                new THREE.Vector3(v1.x, v1.y, v1.z),
+                                new THREE.Vector3(v2.x, v2.y, v2.z)
+                            );
+                            var j = geometry.vertices.length - 3;
+                            geometry.faces.push(new THREE.Face3(j, j + 1, j + 2));
+                        }
+                        geometry.computeBoundingSphere();
+                        geometry.computeFaceNormals();
+                        mesh = new THREE.Mesh(geometry, material);
+                    }
+
+
+
                     break;
 
                 default:

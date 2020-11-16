@@ -45,7 +45,7 @@ let initPhysics = async () => {
     world.broadphase = new CANNON.SAPBroadphase(world);
     world.gravity.set(0, -15, 0);
 
-    world.defaultContactMaterial.friction = 0.1
+    world.defaultContactMaterial.friction = 0.05
     world.allowSleep = true
 
 
@@ -60,7 +60,7 @@ let initPhysics = async () => {
 
     world.addContactMaterial(wheelGroundContactMaterial);
 
-    await addCar()
+    addCar()
 
 
 
@@ -94,21 +94,21 @@ let addEnvironment = () => {
             })
             boxBody.addShape(boxShape)
             boxBody.allowSleep = true
-            boxBody.sleepSpeedLimit = 1
+            boxBody.sleepSpeedLimit = 0.3
             boxBody.sleepTimeLimit = 1;
             boxBody.position.set(5 + j, i + .6, 5)
             world.add(boxBody)
 
 
-            if(i == 1 || (i == 2 && j != 0 && j != 4) || (i == 3 && j == 2)){
-                helper.addVisual(boxBody, 'box', false, false, new THREE.MeshLambertMaterial({color: 0xE8E8E8 }))
+            if (i == 1 || (i == 2 && j != 0 && j != 4) || (i == 3 && j == 2)) {
+                helper.addVisual(boxBody, 'box', false, false, new THREE.MeshLambertMaterial({ color: 0xE8E8E8 }))
             }
-            else{
-                helper.addVisual(boxBody, 'box', false, false, new THREE.MeshLambertMaterial({color: 0xf08080 }))
+            else {
+                helper.addVisual(boxBody, 'box', false, false, new THREE.MeshLambertMaterial({ color: 0xf08080 }))
             }
 
 
-            
+
         }
 
 
@@ -136,18 +136,18 @@ let addEnvironment = () => {
 
     //Name
     let nameShapes = {
-        'size':[
-            [1,1.2,1],
-            [1,1.2,1],
-            [1,1.2,1],
-            [1,1.2,1],
-            [1,1.2,1],
-            [1,1.2,1],
-            [1,1.2,1],
-            [1,1.2,1],
-            [1,1.2,1],
-            [1,1.2,1],
-            [1,1.2,1]
+        'size': [
+            [1.3, 1.7, 0.75],
+            [1, 1.2, 1],
+            [1, 1.2, 1],
+            [1, 1.2, 1],
+            [1, 1.2, 1],
+            [1, 1.2, 1],
+            [1, 1.2, 1],
+            [1, 1.2, 1],
+            [1, 1.2, 1],
+            [1, 1.2, 1],
+            [1, 1.2, 1]
         ],
         // 'offset':[
         //     [1,1,1],
@@ -163,19 +163,57 @@ let addEnvironment = () => {
         //     [1,1,1]
         // ]
     }
-    
-    
 
-    for(let i = 0; i < 11; i++){
+
+
+    for (let i = 0; i < 11; i++) {
         letterBody = new CANNON.Body({
-            mass: 1,
+            mass: 10,
             material: boxMaterial,
-            
+            restitution: 0
         })
-        letterBody.addShape(new CANNON.Box(new CANNON.Vec3(nameShapes.size[i][0], nameShapes.size[i][1], nameShapes.size[i][2])))
-        letterBody.position.set(-6, 6, (i*7) + 4)
+        // var vertices = [
+        //     -1, -1, -1,
+        //     1, -1, -1,
+        //     -1, -1, 1,
+        //     1, -1, 1,
+        //     1, 1, 1,
+        //     -1, 1, 1
+        // ];
+        // var indices = [
+        //     0, 1, 2,
+        //     1, 3, 2,
+        //     1, 4, 3,
+        //     2, 3, 5,
+        //     3, 4, 5,
+        //     0, 2, 5,
+        //     0, 5, 4,
+        //     1, 0, 4  // triangle 0
+        // ];
+        let shape1 = new CANNON.Box(new CANNON.Vec3(0.1,0.5,0.5))
+        let shape2 = new CANNON.Box(new CANNON.Vec3(0.1,1,0.5))
+        let shape3 = new CANNON.Box(new CANNON.Vec3(0.1,1,0.5))
+
+        
+
+        // let triangleShape = new CANNON.Trimesh(vertices, indices)
+        // letterBody.addShape(triangleShape)
+        let q = new CANNON.Quaternion();
+        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 2);
+        letterBody.addShape(shape1, new CANNON.Vec3(1,0,0), q)
+
+
+
+        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI/6);
+
+        letterBody.addShape(shape2, new CANNON.Vec3(0.3, -0.0, 0), q)
+
+        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1),Math.PI/6);
+        letterBody.addShape(shape3, new CANNON.Vec3(1.5, 0, 0),q )
+
+        letterBody.position.set(-6, 6, (i * 7) + 4)
         world.add(letterBody)
-        helper.addVisual(letterBody, 'lettaer' + i)
+        helper.addVisual(letterBody, 'letter' + i)
     }
 
 }
@@ -183,7 +221,6 @@ let addEnvironment = () => {
 
 
 let addCar = () => {
-    return new Promise((res, rej) => {
         const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 1, 2));
         const chassisBody = new CANNON.Body({ mass: 150 });
         chassisBody.addShape(chassisShape);
@@ -202,7 +239,7 @@ let addCar = () => {
             maxSuspensionForce: 100000,
             rollInfluence: 0.01,
             axleLocal: new CANNON.Vec3(-1, 0, 0),
-            chassisConnectionPointLocal: new CANNON.Vec3(1, 1, 0),
+            chassisConnectionPointLocal: new CANNON.Vec3(1, 3, 0),
             maxSuspensionTravel: 0.5,
             customSlidingRotationalSpeed: -30,
             useCustomSlidingRotationalSpeed: true
@@ -216,16 +253,16 @@ let addCar = () => {
             indexForwardAxis: 2
         });
 
-        options.chassisConnectionPointLocal.set(1, -1.0, -1);
+        options.chassisConnectionPointLocal.set(1, -1, -1);
         vehicle.addWheel(options);
 
-        options.chassisConnectionPointLocal.set(-1, -1.0, -1);
+        options.chassisConnectionPointLocal.set(-1, -1, -1);
         vehicle.addWheel(options);
 
-        options.chassisConnectionPointLocal.set(1, -1.0, 1);
+        options.chassisConnectionPointLocal.set(1, -1, 1);
         vehicle.addWheel(options);
 
-        options.chassisConnectionPointLocal.set(-1, -1.0, 1);
+        options.chassisConnectionPointLocal.set(-1, -1, 1);
         vehicle.addWheel(options);
 
         vehicle.addToWorld(world);
@@ -233,10 +270,10 @@ let addCar = () => {
 
         const wheelBodies = [];
         vehicle.wheelInfos.forEach((wheel, i) => {
-            const cylinderShape = new CANNON.Cylinder(wheel.radius + 0.5, wheel.radius, wheel.radius / 2, 20);
+            const cylinderShape = new CANNON.Cylinder(wheel.radius, wheel.radius, wheel.radius / 2, 20);
             const wheelBody = new CANNON.Body({ mass: 1, material: wheelMaterial });
-            wheelBody.allowSleep = true
-            wheelBody.sleepSpeedLimit = 1
+            // wheelBody.allowSleep = true
+            // wheelBody.sleepSpeedLimit = 1
             const q = new CANNON.Quaternion();
             q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
             wheelBody.addShape(cylinderShape, new CANNON.Vec3(), q);
@@ -264,8 +301,7 @@ let addCar = () => {
         scene.add(followCam);
         followCam.parent = chassisBody.threemesh;
         helper.shadowTarget = chassisBody.threemesh;
-        res()
-    })
+
 
 
 }
@@ -291,7 +327,7 @@ let handler = (event) => {
 
         case 40: // backward
             forwardMain = up ? 0 : -1
-            break; 
+            break;
         case 39: // right
             turnMain = up ? 0 : -1
             break;
@@ -301,7 +337,7 @@ let handler = (event) => {
             break;
         case 84:
             scene.remove(scene.getObjectByName('car'))
-            for(let i = 0; i < 4; i++){
+            for (let i = 0; i < 4; i++) {
                 scene.remove(scene.getObjectByName('wheel' + i))
             }
             vehicle.removeFromWorld(world)
