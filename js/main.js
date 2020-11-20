@@ -1,12 +1,12 @@
 let game, scene, followCam, physics, damping, wheelMaterial, vehicle,
     lastTime, world, joystick, container, renderer,
     fixedTimeStep = 1.0 / 60.0, forwardMain = 0, turnMain = 0,
-    clock, maxSteerVal = 0.5, maxForce = 500, brakeForce = 7, helper,
+    clock, maxSteerVal = 0.5, maxForce = 550, brakeForce = 7, helper,
     reduceForward, incForward, groundMaterial
 
 let init = () => {
     camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 1, 2000)
-    camera.position.set(10, 20, 15);
+    camera.position.set(10, 15, 15);
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xa0a0a0);
@@ -190,26 +190,26 @@ let addEnvironment = () => {
         //     0, 5, 4,
         //     1, 0, 4  // triangle 0
         // ];
-        let shape1 = new CANNON.Box(new CANNON.Vec3(0.1,0.5,0.5))
-        let shape2 = new CANNON.Box(new CANNON.Vec3(0.1,1,0.5))
-        let shape3 = new CANNON.Box(new CANNON.Vec3(0.1,1,0.5))
+        let shape1 = new CANNON.Box(new CANNON.Vec3(0.1, 0.5, 0.5))
+        let shape2 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
+        let shape3 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
 
-        
+
 
         // let triangleShape = new CANNON.Trimesh(vertices, indices)
         // letterBody.addShape(triangleShape)
         let q = new CANNON.Quaternion();
         q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 2);
-        letterBody.addShape(shape1, new CANNON.Vec3(1,0,0), q)
+        letterBody.addShape(shape1, new CANNON.Vec3(1, 0, 0), q)
 
 
 
-        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI/6);
+        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 6);
 
         letterBody.addShape(shape2, new CANNON.Vec3(0.3, -0.0, 0), q)
 
-        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1),Math.PI/6);
-        letterBody.addShape(shape3, new CANNON.Vec3(1.5, 0, 0),q )
+        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 6);
+        letterBody.addShape(shape3, new CANNON.Vec3(1.5, 0, 0), q)
 
         letterBody.position.set(-6, 6, (i * 7) + 4)
         world.add(letterBody)
@@ -221,86 +221,91 @@ let addEnvironment = () => {
 
 
 let addCar = () => {
-        const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 1, 2));
-        const chassisBody = new CANNON.Body({ mass: 150 });
-        chassisBody.addShape(chassisShape);
-        chassisBody.position.set(0, 20, 0);
-        helper.addVisual(chassisBody, 'car');
+    const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 1, 2));
+    const chassisBody = new CANNON.Body({ mass: 150 });
+    chassisBody.addShape(chassisShape);
+    chassisBody.position.set(0, 20, 0);
+    helper.addVisual(chassisBody, 'car');
 
 
-        const options = {
-            radius: 0.5,
-            directionLocal: new CANNON.Vec3(0, -1, 0),
-            suspensionStiffness: 30,
-            suspensionRestLength: 0,
-            frictionSlip: 5,
-            dampingRelaxation: 2.3,
-            dampingCompression: 4.4,
-            maxSuspensionForce: 100000,
-            rollInfluence: 0.01,
-            axleLocal: new CANNON.Vec3(-1, 0, 0),
-            chassisConnectionPointLocal: new CANNON.Vec3(1, 3, 0),
-            maxSuspensionTravel: 0.5,
-            customSlidingRotationalSpeed: -30,
-            useCustomSlidingRotationalSpeed: true
-        };
+    const options = {
+        radius: 0.5,
+        directionLocal: new CANNON.Vec3(0, -1, 0),
+        suspensionStiffness: 40,
+        suspensionRestLength: 0,
+        frictionSlip: 5,
+        dampingRelaxation: 2.3,
+        dampingCompression: 4.4,
+        maxSuspensionForce: 100000,
+        rollInfluence: 0.01,
+        axleLocal: new CANNON.Vec3(-1, 0, 0),
+        chassisConnectionPointLocal: new CANNON.Vec3(1, 3, 0),
+        maxSuspensionTravel: 0.5,
+        customSlidingRotationalSpeed: -30,
+        useCustomSlidingRotationalSpeed: true
+    };
 
-        // Create the vehicle
-        vehicle = new CANNON.RaycastVehicle({
-            chassisBody: chassisBody,
-            indexRightAxis: 0,
-            indexUpAxis: 1,
-            indexForwardAxis: 2
+    // Create the vehicle
+    vehicle = new CANNON.RaycastVehicle({
+        chassisBody: chassisBody,
+        indexRightAxis: 0,
+        indexUpAxis: 1,
+        indexForwardAxis: 2
+    });
+
+    options.chassisConnectionPointLocal.set(1, -1, -1);
+    vehicle.addWheel(options);
+
+    options.chassisConnectionPointLocal.set(-1, -1, -1);
+    vehicle.addWheel(options);
+
+    options.chassisConnectionPointLocal.set(1, -1, 1);
+    vehicle.addWheel(options);
+
+    options.chassisConnectionPointLocal.set(-1, -1, 1);
+    vehicle.addWheel(options);
+
+    vehicle.addToWorld(world);
+
+
+    const wheelBodies = [];
+    vehicle.wheelInfos.forEach((wheel, i) => {
+        const cylinderShape = new CANNON.Cylinder(wheel.radius, wheel.radius, wheel.radius / 2, 20);
+        const wheelBody = new CANNON.Body({ mass: 1, material: wheelMaterial });
+        // wheelBody.allowSleep = true
+        // wheelBody.sleepSpeedLimit = 1
+        const q = new CANNON.Quaternion();
+        q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
+        wheelBody.addShape(cylinderShape, new CANNON.Vec3(), q);
+        wheelBodies.push(wheelBody);
+        helper.addVisual(wheelBody, 'wheel' + i);
+    });
+
+
+    // Update wheels
+    world.addEventListener('postStep', function () {
+        let index = 0;
+        vehicle.wheelInfos.forEach(function (wheel) {
+            vehicle.updateWheelTransform(index);
+            const t = wheel.worldTransform;
+            wheelBodies[index].threemesh.position.copy(t.position);
+            wheelBodies[index].threemesh.quaternion.copy(t.quaternion);
+            index++;
         });
-
-        options.chassisConnectionPointLocal.set(1, -1, -1);
-        vehicle.addWheel(options);
-
-        options.chassisConnectionPointLocal.set(-1, -1, -1);
-        vehicle.addWheel(options);
-
-        options.chassisConnectionPointLocal.set(1, -1, 1);
-        vehicle.addWheel(options);
-
-        options.chassisConnectionPointLocal.set(-1, -1, 1);
-        vehicle.addWheel(options);
-
-        vehicle.addToWorld(world);
+    });
 
 
-        const wheelBodies = [];
-        vehicle.wheelInfos.forEach((wheel, i) => {
-            const cylinderShape = new CANNON.Cylinder(wheel.radius, wheel.radius, wheel.radius / 2, 20);
-            const wheelBody = new CANNON.Body({ mass: 1, material: wheelMaterial });
-            // wheelBody.allowSleep = true
-            // wheelBody.sleepSpeedLimit = 1
-            const q = new CANNON.Quaternion();
-            q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
-            wheelBody.addShape(cylinderShape, new CANNON.Vec3(), q);
-            wheelBodies.push(wheelBody);
-            helper.addVisual(wheelBody, 'wheel' + i);
-        });
+    followCam = new THREE.Object3D();
+    followCam.name = 'followCam'
+    followCam.position.copy(camera.position);
+    scene.add(followCam);
+    followCam.parent = chassisBody.threemesh;
+    helper.shadowTarget = chassisBody.threemesh;
 
-
-        // Update wheels
-        world.addEventListener('postStep', function () {
-            let index = 0;
-            vehicle.wheelInfos.forEach(function (wheel) {
-                vehicle.updateWheelTransform(index);
-                const t = wheel.worldTransform;
-                wheelBodies[index].threemesh.position.copy(t.position);
-                wheelBodies[index].threemesh.quaternion.copy(t.quaternion);
-                index++;
-            });
-        });
-
-
-        followCam = new THREE.Object3D();
-        followCam.name = 'followCam'
-        followCam.position.copy(camera.position);
-        scene.add(followCam);
-        followCam.parent = chassisBody.threemesh;
-        helper.shadowTarget = chassisBody.threemesh;
+    vehicle.setBrake(brakeForce, 0);
+        vehicle.setBrake(brakeForce, 1);
+        vehicle.setBrake(brakeForce, 2);
+        vehicle.setBrake(brakeForce, 3);
 
 
 
@@ -310,30 +315,114 @@ let addCar = () => {
 let joystickCallback = (forward, turn) => {
     forwardMain = forward;
     turnMain = -turn;
+
+
+    let force = maxForce * forwardMain;
+    let steer = maxSteerVal * turnMain;
+
+    if (forward != 0) {
+        vehicle.setBrake(0, 0);
+        vehicle.setBrake(0, 1);
+        vehicle.setBrake(0, 2);
+        vehicle.setBrake(0, 3);
+
+        vehicle.applyEngineForce(force, 2);
+        vehicle.applyEngineForce(force, 3);
+        if (forward > 0) {
+            vehicle.wheelInfos[0].rotation -= 1.1
+            vehicle.wheelInfos[1].rotation -= 1.1
+
+            vehicle.wheelInfos[2].rotation -= 1.1
+            vehicle.wheelInfos[3].rotation -= 1.1
+        }
+        else {
+            vehicle.wheelInfos[0].rotation += 1.1
+            vehicle.wheelInfos[1].rotation += 1.1
+            vehicle.wheelInfos[2].rotation += 1.1
+            vehicle.wheelInfos[3].rotation += 1.1
+        }
+    } else {
+        vehicle.setBrake(brakeForce, 0);
+        vehicle.setBrake(brakeForce, 1);
+        vehicle.setBrake(brakeForce, 2);
+        vehicle.setBrake(brakeForce, 3);
+    }
+
+    vehicle.setSteeringValue(steer, 0);
+    vehicle.setSteeringValue(steer, 1);
 }
 
-let handler = (event) => {
-    let up = (event.type == 'keyup');
+let up;
 
-    if (!up && event.type !== 'keydown') {
-        return;
-    }
+let handler = (event) => {
+
+        up = (event.type == 'keyup');
+
+        if (!up && event.type !== 'keydown') {
+            return;
+        }
+
+    // switch (event.keyCode) {
+
+    //     case 38: // forward
+    //         forwardMain = up ? 0 : 1
+    //         break;
+
+    //     case 40: // backward
+    //         forwardMain = up ? 0 : -1
+    //         break;
+    //     case 39: // right
+    //         turnMain = up ? 0 : -1
+    //         break;
+
+    //     case 37: // left
+    //         turnMain = up ? 0 : 1
+    //         break;
+    //     case 84:
+    //         scene.remove(scene.getObjectByName('car'))
+    //         for (let i = 0; i < 4; i++) {
+    //             scene.remove(scene.getObjectByName('wheel' + i))
+    //         }
+    //         vehicle.removeFromWorld(world)
+    //         scene.remove(scene.getObjectByName('followCam'))
+    //         camera.position.set(10, 20, 15);
+
+    //         addCar()
+    //         break;
+    // }
+
+    vehicle.setBrake(0, 0);
+    vehicle.setBrake(0, 1);
+    vehicle.setBrake(0, 2);
+    vehicle.setBrake(0, 3);
 
     switch (event.keyCode) {
 
         case 38: // forward
-            forwardMain = up ? 0 : 1
+            vehicle.applyEngineForce(up ? 0 : maxForce, 2);
+            vehicle.applyEngineForce(up ? 0 : maxForce, 3);
             break;
 
         case 40: // backward
-            forwardMain = up ? 0 : -1
+            vehicle.applyEngineForce(up ? 0 : -maxForce, 2);
+            vehicle.applyEngineForce(up ? 0 : -maxForce, 3);
             break;
+
+        case 66: // b
+            vehicle.setBrake(brakeForce, 0);
+            vehicle.setBrake(brakeForce, 1);
+            vehicle.setBrake(brakeForce, 2);
+            vehicle.setBrake(brakeForce, 3);
+            break;
+
         case 39: // right
-            turnMain = up ? 0 : -1
+            vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 0);
+            vehicle.setSteeringValue(up ? 0 : -maxSteerVal, 1);
             break;
 
         case 37: // left
-            turnMain = up ? 0 : 1
+            vehicle.setSteeringValue(up ? 0 : maxSteerVal, 0);
+            vehicle.setSteeringValue(up ? 0 : maxSteerVal, 1);
             break;
         case 84:
             scene.remove(scene.getObjectByName('car'))
@@ -346,6 +435,7 @@ let handler = (event) => {
 
             addCar()
             break;
+
     }
 }
 
@@ -410,8 +500,8 @@ let animate = () => {
     world.step(fixedTimeStep, dt);
     helper.updateBodies(world);
 
-    updateDrive();
-    // updateCamera();
+    // updateDrive();
+    updateCamera();
 
     renderer.render(scene, camera);
 }

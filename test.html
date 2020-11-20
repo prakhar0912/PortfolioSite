@@ -86,7 +86,7 @@
            this.world = world;
            this.world.allowSleep = true
            world.broadphase = new CANNON.SAPBroadphase(world);
-           world.gravity.set(0, -20, 0);
+           world.gravity.set(0, -10, 0);
            world.defaultContactMaterial.friction = 0;
    
            const groundMaterial = new CANNON.Material("groundMaterial");
@@ -103,7 +103,7 @@
    
    
            const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 0.3, 2));
-           const chassisBody = new CANNON.Body({ mass: 150 });
+           const chassisBody = new CANNON.Body({ mass: 100 });
            chassisBody.addShape(chassisShape);
            chassisBody.position.set(0,20,0);
            chassisBody.angularVelocity.set(0, 0, 0);
@@ -128,7 +128,7 @@
                maxSuspensionForce: 200000,
                rollInfluence:  0.01,
                axleLocal: new CANNON.Vec3(-1, 0, 0),
-               chassisConnectionPointLocal: new CANNON.Vec3(1, 1, 0),
+               chassisConnectionPointLocal: new CANNON.Vec3(1, 2, 0),
                maxSuspensionTravel: 0.25,
                customSlidingRotationalSpeed: -30,
                useCustomSlidingRotationalSpeed: true
@@ -160,7 +160,7 @@
            vehicle.addToWorld(world);
    
            const wheelBodies = [];
-   /*		 for(var i=0; i<vehicle.wheelInfos.length; i++){
+   		 for(var i=0; i<vehicle.wheelInfos.length; i++){
                    var wheel = vehicle.wheelInfos[i];
                    var cylinderShape = new CANNON.Cylinder(wheel.radius, wheel.radius, wheel.radius / 2, 20);
                    var wheelBody = new CANNON.Body({ mass: 1 });
@@ -170,35 +170,35 @@
                    wheelBodies.push(wheelBody);
                    game.helper.addVisual(wheelBody);
                    
-               }*/
+               }
    
                
-           vehicle.wheelInfos.forEach( function(wheel){
-               const cylinderShape = new CANNON.Cylinder(wheel.radius, wheel.radius, wheel.radius / 2, 20);
-               const wheelBody = new CANNON.Body({ mass: 1, material: wheelMaterial });
-               const q = new CANNON.Quaternion();
-               q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
-               wheelBody.addShape(cylinderShape, new CANNON.Vec3(), q);
-               wheelBodies.push(wheelBody);
-               game.helper.addVisual(wheelBody, 'wheel');
-           });
+        //    vehicle.wheelInfos.forEach( function(wheel){
+        //        const cylinderShape = new CANNON.Cylinder(wheel.radius, wheel.radius, wheel.radius / 2, 5);
+        //        const wheelBody = new CANNON.Body({ mass: 5 });
+        //        const q = new CANNON.Quaternion();
+        //        q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
+        //        wheelBody.addShape(cylinderShape, new CANNON.Vec3(), q);
+        //        wheelBodies.push(wheelBody);
+        //        game.helper.addVisual(wheelBody, 'wheel');
+        //    });
    
    
                        //wheel model
-               var loader = new THREE.LegacyJSONLoader();
-               loader.load('https://raw.githubusercontent.com/baronwatts/models/master/dodge-wheel.js', function(geometry, materials) {
-                 wheelBodies.map((d, i) => {
-                   var model = new THREE.Mesh(geometry, materials);
-                   model.geometry.center();
-                   model.scale.set(2, 2, 2);
-                   model.castShadow = true;
-                   //model.rotation.z = Math.PI/2;
-                   model.material.shading = THREE.SmoothShading;
-                   model.geometry.computeVertexNormals(true);
-                   if(i == 1 || i == 3) model.rotateY(Math.PI);
-                   wheelBodies[i].threemesh.add(model);
-                 });
-               });
+            //    var loader = new THREE.LegacyJSONLoader();
+            //    loader.load('https://raw.githubusercontent.com/baronwatts/models/master/dodge-wheel.js', function(geometry, materials) {
+            //      wheelBodies.map((d, i) => {
+            //        var model = new THREE.Mesh(geometry, materials);
+            //        model.geometry.center();
+            //        model.scale.set(2, 2, 2);
+            //        model.castShadow = true;
+            //        //model.rotation.z = Math.PI/2;
+            //        model.material.shading = THREE.SmoothShading;
+            //        model.geometry.computeVertexNormals(true);
+            //        if(i == 1 || i == 3) model.rotateY(Math.PI);
+            //        wheelBodies[i].threemesh.add(model);
+            //      });
+            //    });
    
    
    
@@ -258,14 +258,14 @@
    
    
            //===================================================== model           
-           /*var groundShape = new CANNON.Plane();
-           var groundBody = new CANNON.Body({
-             mass: 0
-           });
-           groundBody.addShape(groundShape);
-           groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-           world.add(groundBody);
-           this.helper.addVisual(groundBody, 'ground');*/
+        //    var groundShape = new CANNON.Plane();
+        //    var groundBody = new CANNON.Body({
+        //      mass: 0
+        //    });
+        //    groundBody.addShape(groundShape);
+        //    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+        //    world.add(groundBody);
+        //    this.helper.addVisual(groundBody, 'ground');
            
            this.animate();
        }
@@ -278,17 +278,17 @@
        updateDrive(forward=this.js.forward, turn=this.js.turn){
            
            const maxSteerVal = 0.6;
-           const maxForce = 500;
-           const brakeForce = 10;
+           const maxForce = 1000.0;
+           const brakeForce = 1000000.0;
             
            const force = maxForce * forward;
            const steer = maxSteerVal * turn;
             
            if (forward!=0){
-               this.vehicle.setBrake(0, 0);
-               this.vehicle.setBrake(0, 1);
-               this.vehicle.setBrake(0, 2);
-               this.vehicle.setBrake(0, 3);
+               this.vehicle.setBrake(0.0, 0);
+               this.vehicle.setBrake(0.0, 1);
+               this.vehicle.setBrake(0.0, 2);
+               this.vehicle.setBrake(0.0, 3);
    
                this.vehicle.applyEngineForce(force, 0);
                this.vehicle.applyEngineForce(force, 1);
