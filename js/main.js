@@ -133,63 +133,13 @@ let addEnvironment = () => {
     helper.addVisual(wedgeBody, 'ramp')
 
 
-
-    //Name
-    let nameShapes = {
-        'size': [
-            [1.3, 1.7, 0.75],
-            [1, 1.2, 1],
-            [1, 1.2, 1],
-            [1, 1.2, 1],
-            [1, 1.2, 1],
-            [1, 1.2, 1],
-            [1, 1.2, 1],
-            [1, 1.2, 1],
-            [1, 1.2, 1],
-            [1, 1.2, 1],
-            [1, 1.2, 1]
-        ],
-        // 'offset':[
-        //     [1,1,1],
-        //     [1,1,1],
-        //     [1,1,1],
-        //     [1,1,1],
-        //     [1,1,1],
-        //     [1,1,1],
-        //     [1,1,1],
-        //     [1,1,1],
-        //     [1,1,1],
-        //     [1,1,1],
-        //     [1,1,1]
-        // ]
-    }
-
-
-
     for (let i = 0; i < 11; i++) {
         letterBody = new CANNON.Body({
             mass: 10,
             material: boxMaterial,
             restitution: 0
         })
-        // var vertices = [
-        //     -1, -1, -1,
-        //     1, -1, -1,
-        //     -1, -1, 1,
-        //     1, -1, 1,
-        //     1, 1, 1,
-        //     -1, 1, 1
-        // ];
-        // var indices = [
-        //     0, 1, 2,
-        //     1, 3, 2,
-        //     1, 4, 3,
-        //     2, 3, 5,
-        //     3, 4, 5,
-        //     0, 2, 5,
-        //     0, 5, 4,
-        //     1, 0, 4  // triangle 0
-        // ];
+        
         let shape1 = new CANNON.Box(new CANNON.Vec3(0.1, 0.5, 0.5))
         let shape2 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
         let shape3 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
@@ -362,34 +312,6 @@ let handler = (event) => {
             return;
         }
 
-    // switch (event.keyCode) {
-
-    //     case 38: // forward
-    //         forwardMain = up ? 0 : 1
-    //         break;
-
-    //     case 40: // backward
-    //         forwardMain = up ? 0 : -1
-    //         break;
-    //     case 39: // right
-    //         turnMain = up ? 0 : -1
-    //         break;
-
-    //     case 37: // left
-    //         turnMain = up ? 0 : 1
-    //         break;
-    //     case 84:
-    //         scene.remove(scene.getObjectByName('car'))
-    //         for (let i = 0; i < 4; i++) {
-    //             scene.remove(scene.getObjectByName('wheel' + i))
-    //         }
-    //         vehicle.removeFromWorld(world)
-    //         scene.remove(scene.getObjectByName('followCam'))
-    //         camera.position.set(10, 20, 15);
-
-    //         addCar()
-    //         break;
-    // }
 
     vehicle.setBrake(0, 0);
     vehicle.setBrake(0, 1);
@@ -434,6 +356,12 @@ let handler = (event) => {
             camera.position.set(10, 20, 15);
 
             addCar()
+            break;
+        case 16:
+            maxForce += 20
+            setTimeout(() => {
+                maxForce -= 20
+            }, 500)
             break;
 
     }
