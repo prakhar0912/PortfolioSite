@@ -1,12 +1,12 @@
 let game, scene, followCam, physics, damping, wheelMaterial, vehicle,
     lastTime, world, joystick, container, renderer,
-    fixedTimeStep = 1.0 / 60.0, forwardMain = 0, turnMain = 0,
-    clock, maxSteerVal = 0.5, maxForce = 550, brakeForce = 7, helper,
+    fixedTimeStep = 1.0 / 100.0, forwardMain = 0, turnMain = 0,
+    clock, maxSteerVal = 0.5, maxForce = 400, brakeForce = 7, helper,
     reduceForward, incForward, groundMaterial
 
 let init = () => {
     camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 1, 2000)
-    camera.position.set(10, 15, 15);
+    camera.position.set(10, 20, 15);
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xa0a0a0);
@@ -38,6 +38,8 @@ let init = () => {
     initPhysics();
 }
 
+
+
 let initPhysics = async () => {
 
     world = new CANNON.World();
@@ -63,7 +65,6 @@ let initPhysics = async () => {
     addCar()
 
 
-
     let shape = new CANNON.Plane()
     let groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
     groundBody.addShape(shape);
@@ -76,9 +77,7 @@ let initPhysics = async () => {
 
 
 let addEnvironment = () => {
-
-
-
+    
     //Boxes
     const boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5))
     boxMaterial = new CANNON.Material("boxMaterial");
@@ -139,19 +138,14 @@ let addEnvironment = () => {
             material: boxMaterial,
             restitution: 0
         })
-        
+
         let shape1 = new CANNON.Box(new CANNON.Vec3(0.1, 0.5, 0.5))
         let shape2 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
         let shape3 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
 
-
-
-        // let triangleShape = new CANNON.Trimesh(vertices, indices)
-        // letterBody.addShape(triangleShape)
         let q = new CANNON.Quaternion();
         q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 2);
         letterBody.addShape(shape1, new CANNON.Vec3(1, 0, 0), q)
-
 
 
         q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 6);
@@ -167,7 +161,6 @@ let addEnvironment = () => {
     }
 
 }
-
 
 
 let addCar = () => {
@@ -253,9 +246,9 @@ let addCar = () => {
     helper.shadowTarget = chassisBody.threemesh;
 
     vehicle.setBrake(brakeForce, 0);
-        vehicle.setBrake(brakeForce, 1);
-        vehicle.setBrake(brakeForce, 2);
-        vehicle.setBrake(brakeForce, 3);
+    vehicle.setBrake(brakeForce, 1);
+    vehicle.setBrake(brakeForce, 2);
+    vehicle.setBrake(brakeForce, 3);
 
 
 
@@ -306,11 +299,11 @@ let up;
 
 let handler = (event) => {
 
-        up = (event.type == 'keyup');
+    up = (event.type == 'keyup');
 
-        if (!up && event.type !== 'keydown') {
-            return;
-        }
+    if (!up && event.type !== 'keydown') {
+        return;
+    }
 
 
     vehicle.setBrake(0, 0);
@@ -323,11 +316,15 @@ let handler = (event) => {
         case 38: // forward
             vehicle.applyEngineForce(up ? 0 : maxForce, 2);
             vehicle.applyEngineForce(up ? 0 : maxForce, 3);
+            vehicle.applyEngineForce(up ? 0 : maxForce, 0);
+            vehicle.applyEngineForce(up ? 0 : maxForce, 1);
             break;
 
         case 40: // backward
             vehicle.applyEngineForce(up ? 0 : -maxForce, 2);
             vehicle.applyEngineForce(up ? 0 : -maxForce, 3);
+            vehicle.applyEngineForce(up ? 0 : -maxForce, 0);
+            vehicle.applyEngineForce(up ? 0 : -maxForce, 1);
             break;
 
         case 66: // b
@@ -358,10 +355,8 @@ let handler = (event) => {
             addCar()
             break;
         case 16:
-            maxForce += 20
-            setTimeout(() => {
-                maxForce -= 20
-            }, 500)
+            vehicle.applyEngineForce(up ? 0 : maxForce + 300, 2);
+            vehicle.applyEngineForce(up ? 0 : maxForce + 300, 3);
             break;
 
     }
@@ -374,45 +369,48 @@ let onWindowResize = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-let updateDrive = (forward = forwardMain, turn = turnMain) => {
+// let updateDrive = (forward = forwardMain, turn = turnMain) => {
 
-    let force = maxForce * forward;
-    let steer = maxSteerVal * turn;
+//     let force = maxForce * forward;
+//     let steer = maxSteerVal * turn;
 
-    if (forward != 0) {
-        vehicle.setBrake(0, 0);
-        vehicle.setBrake(0, 1);
-        vehicle.setBrake(0, 2);
-        vehicle.setBrake(0, 3);
+//     if (forward != 0) {
+//         vehicle.setBrake(0, 0);
+//         vehicle.setBrake(0, 1);
+//         vehicle.setBrake(0, 2);
+//         vehicle.setBrake(0, 3);
 
-        vehicle.applyEngineForce(force, 2);
-        vehicle.applyEngineForce(force, 3);
-        if (forward > 0) {
-            vehicle.wheelInfos[0].rotation -= 1.1
-            vehicle.wheelInfos[1].rotation -= 1.1
+//         vehicle.applyEngineForce(force, 2);
+//         vehicle.applyEngineForce(force, 3);
+//         if (forward > 0) {
+//             vehicle.wheelInfos[0].rotation -= 1.1
+//             vehicle.wheelInfos[1].rotation -= 1.1
 
-            vehicle.wheelInfos[2].rotation -= 1.1
-            vehicle.wheelInfos[3].rotation -= 1.1
-        }
-        else {
-            vehicle.wheelInfos[0].rotation += 1.1
-            vehicle.wheelInfos[1].rotation += 1.1
-            vehicle.wheelInfos[2].rotation += 1.1
-            vehicle.wheelInfos[3].rotation += 1.1
-        }
-    } else {
-        vehicle.setBrake(brakeForce, 0);
-        vehicle.setBrake(brakeForce, 1);
-        vehicle.setBrake(brakeForce, 2);
-        vehicle.setBrake(brakeForce, 3);
-    }
+//             vehicle.wheelInfos[2].rotation -= 1.1
+//             vehicle.wheelInfos[3].rotation -= 1.1
+//         }
+//         else {
+//             vehicle.wheelInfos[0].rotation += 1.1
+//             vehicle.wheelInfos[1].rotation += 1.1
+//             vehicle.wheelInfos[2].rotation += 1.1
+//             vehicle.wheelInfos[3].rotation += 1.1
+//         }
+//     } else {
+//         vehicle.setBrake(brakeForce, 0);
+//         vehicle.setBrake(brakeForce, 1);
+//         vehicle.setBrake(brakeForce, 2);
+//         vehicle.setBrake(brakeForce, 3);
+//     }
 
-    vehicle.setSteeringValue(steer, 0);
-    vehicle.setSteeringValue(steer, 1);
-}
+//     vehicle.setSteeringValue(steer, 0);
+//     vehicle.setSteeringValue(steer, 1);
+// }
 
 let updateCamera = () => {
-    camera.position.lerp(followCam.getWorldPosition(new THREE.Vector3()), 0.05);
+    camera.position.copy(followCam.getWorldPosition(new THREE.Vector3()), 0.1);
+    // camera.position.copy(followCam.getWorldPosition(new THREE.Vector3()));
+
+    // camera.position.set(vehicle.chassisBody.threemesh.position.x + 10,vehicle.chassisBody.threemesh.position.y + 15, vehicle.chassisBody.threemesh.position.z + 15 )
     camera.lookAt(vehicle.chassisBody.threemesh.position);
 }
 
@@ -428,7 +426,7 @@ let animate = () => {
     world.step(fixedTimeStep, dt);
     helper.updateBodies(world);
 
-    // updateDrive();
+    
     updateCamera();
 
     renderer.render(scene, camera);
