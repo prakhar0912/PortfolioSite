@@ -1,5 +1,80 @@
 const loader = new THREE.GLTFLoader();
 
+
+let car, wheel, wheel2, wheel3, wheel4, letterP, letterR, letterA, letterK, letterH, letterS, letterO, letterN, letterI, tree; //12
+let loaded = 0
+
+
+let getWheel = (data) => {
+    return data.scene
+}
+
+let loadAssets = () => {
+    return new Promise(async (res, rej) => {
+
+        loadCar(res)
+        loadWheel(res)
+        loadTree(res)
+        // loadLetters(res)
+
+    })
+}
+
+let loadCar = (resFunc) => {
+    console.log('1')
+    loader.load('assets/car.gltf', (gltf) => {
+        car = gltf.scene
+        if (loaded == 2) {
+            return resFunc()
+        }
+        else {
+            loaded++
+        }
+    }, (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    }, (err) => {
+        console.log(err)
+    })
+}
+
+let loadWheel = (resFunc) => {
+    console.log('2')
+    loader.load('assets/wheel.gltf', (gltf) => {
+        wheel = gltf
+        // wheel2 = gltf.scene
+        // wheel3 = gltf.scene
+        // wheel4 = gltf.scene
+        if (loaded == 2) {
+            return resFunc()
+        }
+        else {
+            loaded++
+        }
+    }, (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    }, (err) => {
+        console.log(err)
+    })
+}
+
+let loadTree = (resFunc) => {
+    console.log(3)
+    loader.load('assets/tree/tree01.gltf', (gltf) => {
+        tree = gltf.scene
+        if (loaded == 2) {
+            return resFunc()
+        }
+        else {
+            loaded++
+        }
+    }, (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    }, (err) => {
+        console.log(err)
+    })
+}
+
+
 class CannonHelper {
     constructor(scene) {
         this.scene = scene;
@@ -109,6 +184,7 @@ class CannonHelper {
         const game = this;
         let index = 0;
         let model = false
+        let newModel
         body.shapes.forEach(function (shape) {
             let mesh;
             let geometry;
@@ -161,34 +237,18 @@ class CannonHelper {
                 case CANNON.Shape.types.BOX:
                     if (name == 'car') {
                         model = true
-                        loader.load('assets/car.gltf', (gltf) => {
-                            gltf.scene.scale.set(2.8, 2.8, 2.8);
-                            mesh = gltf.scene
-                            mesh.receiveShadow = receiveShadow;
-                            mesh.castShadow = castShadow;
+                        // console.log(car)
+                        mesh = car
+                        // console.log(mesh)
+                        mesh.scale.set(2.8, 2.8, 2.8);
 
-                            mesh.traverse(function (child) {
-                                if (child.isMesh) {
-                                    child.castShadow = castShadow;
-                                    child.receiveShadow = receiveShadow;
-                                }
-                            });
+                        var q = body.shapeOrientations[index++];
+                        mesh.position.set(0, 0, 0);
+                        mesh.quaternion.set(q.x, q.y, q.z, q.w);
 
-                            var q = body.shapeOrientations[index++];
-                            mesh.position.set(0, 0, 0);
-                            mesh.quaternion.set(q.x, q.y, q.z, q.w);
-
-                            obj.add(mesh);
-                            return obj;
-
-                        }, (xhr) => {
-                            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                        }, (err) => {
-                            console.log(err)
-                        })
+                        obj.add(mesh);
+                        return obj;
                     }
-
-
                     else {
                         const box_geometry = new THREE.BoxGeometry(shape.halfExtents.x * 2,
                             shape.halfExtents.y * 2,
@@ -201,37 +261,17 @@ class CannonHelper {
                     if (name.slice(0, 5) == 'wheel') {
                         model = true
                         let number = name.slice(5, 6)
-
-                        loader.load('assets/wheel.gltf', (gltf) => {
-                            gltf.scene.scale.set(2.8, 2.8, 2.8);
-                            mesh = gltf.scene
-                            mesh.receiveShadow = receiveShadow;
-                            mesh.castShadow = castShadow;
-
-                            mesh.traverse(function (child) {
-                                if (child.isMesh) {
-                                    child.castShadow = castShadow;
-                                    child.receiveShadow = receiveShadow;
-                                }
-                            });
-
-                            var o = body.shapeOffsets[index];
-                            var q = body.shapeOrientations[index++];
-                            mesh.position.set(o.x, o.y, o.z);
-                            mesh.quaternion.set(q.x, q.y, q.z, q.w);
-
-                            if (number == '2' || number == '0') {
-                                mesh.rotateX(Math.PI)
-                            }
-
-                            obj.add(mesh);
-                            return obj;
-
-                        }, (xhr) => {
-                            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                        }, (err) => {
-                            console.log(err)
-                        })
+                        newModel = wheel.scene.clone()
+                        newModel.scale.set(2.8, 2.8, 2.8);
+                        var o = body.shapeOffsets[index];
+                        var q = body.shapeOrientations[index++];
+                        newModel.position.set(o.x, o.y, o.z);
+                        newModel.quaternion.set(q.x, q.y, q.z, q.w);
+                        if (number == '2' || number == '0') {
+                            newModel.rotateX(Math.PI)
+                        }
+                        obj.add(newModel);
+                        return obj;
                     }
                     else {
                         const geo = new THREE.Geometry();

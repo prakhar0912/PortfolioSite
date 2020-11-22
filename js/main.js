@@ -55,8 +55,8 @@ let initPhysics = async () => {
     groundMaterial = new CANNON.Material("groundMaterial");
     wheelMaterial = new CANNON.Material("wheelMaterial");
     const wheelGroundContactMaterial = new CANNON.ContactMaterial(wheelMaterial, groundMaterial, {
-        friction: 0.5,
-        restitution: 0.6,
+        friction: 0.3,
+        restitution: 0,
         contactEquationStiffness: 1000
     });
 
@@ -76,8 +76,28 @@ let initPhysics = async () => {
 }
 
 
+
+let Ashape = (letterBody) => {
+    let shape1 = new CANNON.Box(new CANNON.Vec3(0.1, 0.5, 0.5))
+    let shape2 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
+    let shape3 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
+
+    let q = new CANNON.Quaternion();
+    q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 2);
+    letterBody.addShape(shape1, new CANNON.Vec3(1, 0, 0), q)
+
+
+    q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 6);
+
+    letterBody.addShape(shape2, new CANNON.Vec3(0.3, -0.0, 0), q)
+
+    q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 6);
+    letterBody.addShape(shape3, new CANNON.Vec3(1.5, 0, 0), q)
+}
+
+
 let addEnvironment = () => {
-    
+
     //Boxes
     const boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5))
     boxMaterial = new CANNON.Material("boxMaterial");
@@ -139,21 +159,7 @@ let addEnvironment = () => {
             restitution: 0
         })
 
-        let shape1 = new CANNON.Box(new CANNON.Vec3(0.1, 0.5, 0.5))
-        let shape2 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
-        let shape3 = new CANNON.Box(new CANNON.Vec3(0.1, 1, 0.5))
-
-        let q = new CANNON.Quaternion();
-        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 2);
-        letterBody.addShape(shape1, new CANNON.Vec3(1, 0, 0), q)
-
-
-        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 6);
-
-        letterBody.addShape(shape2, new CANNON.Vec3(0.3, -0.0, 0), q)
-
-        q.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI / 6);
-        letterBody.addShape(shape3, new CANNON.Vec3(1.5, 0, 0), q)
+        Ashape(letterBody)
 
         letterBody.position.set(-6, 6, (i * 7) + 4)
         world.add(letterBody)
@@ -165,7 +171,7 @@ let addEnvironment = () => {
 
 let addCar = () => {
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 1, 2));
-    const chassisBody = new CANNON.Body({ mass: 150 });
+    const chassisBody = new CANNON.Body({ mass: 130 });
     chassisBody.addShape(chassisShape);
     chassisBody.position.set(0, 20, 0);
     helper.addVisual(chassisBody, 'car');
@@ -426,8 +432,8 @@ let animate = () => {
     world.step(fixedTimeStep, dt);
     helper.updateBodies(world);
 
-    
-    updateCamera();
+
+    updateCamera()
 
     renderer.render(scene, camera);
 }
@@ -521,4 +527,10 @@ class JoyStick {
 }
 
 
-init()
+let start = async () => {
+    await loadAssets()
+    console.log('cool')
+    init()
+}
+
+start()
